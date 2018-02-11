@@ -41,7 +41,7 @@ def createProfile(name):
             pass
         return None
     name = relPath('profiles/'+name)
-    print(name)
+    # print(name)
     try:
         os.mkdir(name)
         def mk(x):
