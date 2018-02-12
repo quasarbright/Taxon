@@ -21,7 +21,7 @@ if not os.path.isdir(relPath('profiles')):
 def runpy(f,*options):
     '''like runpy('tensorflow/retrain.py','-h')'''
     if 'tensorflow/' in f:
-        tempf = re.sub('tensorflow/','',tempf)
+        tempf = re.sub('tensorflow/','',f)
         tempf = re.sub('\.py','\.exe',tempf)
         if os.path.isfile(relPath(tempf)):# if frozen
             return subprocess.check_output([relPath(tempf),*options]).decode('utf-8')
