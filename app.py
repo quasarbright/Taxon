@@ -51,8 +51,9 @@ def train(profile,image_dir,shouldPrint=False):
     return None
 def label(profile,image_path,shouldPrint=False,shouldParse=True):
     profile = relPath('profiles/'+profile)
-    myargs = '''--graph {profile}\\output_graph.pb --labels={profile}\\output_labels.txt --input_layer=Mul --output_layer=final_result --input_mean=128 --input_std=128 --image={image_path}'''.format(profile=profile,image_path=image_path)
-    myargs = myargs.split(' ')
+    myargs = '''--graph, {profile}\\output_graph.pb, --labels={profile}\\output_labels.txt, --input_layer=Mul, --output_layer=final_result, --input_mean=128, --input_std=128, --image={image_path}'''.format(profile=profile,image_path=image_path)
+    myargs = myargs.split(', ')
+    print(myargs)
     ans = runpy('tensorflow/label_image.py',*myargs)
     if not shouldParse:
         if shouldPrint:
@@ -60,6 +61,7 @@ def label(profile,image_path,shouldPrint=False,shouldParse=True):
         return ans
     ans = re.split(r'[\n\r]+',ans)
     ans = [e.split(' ') for e in ans][:-1]
+    ans = [[' '.join(e[:-1]), e[-1]] for e in ans]
     print(ans)
     ans = [[e[0],float(e[1])] for e in ans]
     ans = ans[0]
