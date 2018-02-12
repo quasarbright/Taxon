@@ -8,7 +8,14 @@ defaultSize = '378x265'
 def relPath(f):
     '''returns absolute path of relative path f (can contain '/' but not '\\')'''
     f = f.split('/')
-    return os.path.join(THIS_FOLDER,*f)
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        datadir = os.path.dirname(os.path.abspath(sys.executable))
+    else:
+        # The application is not frozen
+        # Change this bit to match where you store your data files:
+        datadir = os.path.dirname(os.path.absPath(__file__))
+    return os.path.join(datadir, *f)
 if not os.path.isdir(relPath('profiles')):
     os.mkdir(relPath('profiles'))
 def runpy(f,*options):
@@ -156,7 +163,7 @@ def press(button):
 
 #============================== main window ====================================
 
-app = gui('app',defaultSize)
+app = gui('Taxon',defaultSize)
 app.setIcon(relPath('MISTER-BRAINWASH.ico'))
 app.addButton('add a profile',press)
 app.addButton('train a profile',press)
