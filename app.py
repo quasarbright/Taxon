@@ -1,7 +1,7 @@
 from appJar import gui
 import subprocess
 import re, sys, os, shutil
-THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+THIS_FOLDER = os.path.dirname(os.path.abspath("__file__"))
 defaultSize = '378x265'
 
 #============================== general purpose functions ======================
@@ -14,12 +14,17 @@ def relPath(f):
     else:
         # The application is not frozen
         # Change this bit to match where you store your data files:
-        datadir = os.path.dirname(os.path.abspath(__file__))
+        datadir = os.path.dirname(os.path.abspath('__file__'))
     return os.path.join(datadir, *f)
 if not os.path.isdir(relPath('profiles')):
     os.mkdir(relPath('profiles'))
 def runpy(f,*options):
     '''like runpy('tensorflow/retrain.py','-h')'''
+    if 'tensorflow/' in f:
+        tempf = re.sub('tensorflow/','',tempf)
+        tempf = re.sub('\.py','\.exe',tempf)
+        if os.path.isfile(relPath(tempf)):# if frozen
+            return subprocess.check_output([relPath(tempf),*options]).decode('utf-8')
     return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
 def profiles():
     return os.listdir(relPath('profiles'))
