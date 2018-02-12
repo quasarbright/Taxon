@@ -20,11 +20,11 @@ if not os.path.isdir(relPath('profiles')):
     os.mkdir(relPath('profiles'))
 def runpy(f,*options):
     '''like runpy('tensorflow/retrain.py','-h')'''
-    if 'tensorflow/' in f:
-        tempf = re.sub('tensorflow/','',f)
-        tempf = re.sub('\.py','\.exe',tempf)
-        if os.path.isfile(relPath(tempf)):# if frozen
-            return subprocess.check_output([relPath(tempf),*options]).decode('utf-8')
+    # if 'tensorflow/' in f:
+    #     tempf = re.sub('tensorflow/','',f)
+    #     tempf = re.sub('\.py','\.exe',tempf)
+    #     if os.path.isfile(relPath(tempf)):# if frozen
+    #         return subprocess.check_output([relPath(tempf),*options]).decode('utf-8')
     return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
 def profiles():
     return os.listdir(relPath('profiles'))
@@ -110,6 +110,8 @@ def press(button):
     elif button == 'add a profile':
         app.showSubWindow('add profile window')
         app.setFocus('profile name')
+    elif button == 'view profiles':
+        app.showSubWindow('view profiles window')
     elif button == 'train a profile':
         if len(profiles()) > 0:
             app.showSubWindow('train profile window')
@@ -171,6 +173,7 @@ def press(button):
 app = gui('Taxon',defaultSize)
 app.setIcon(relPath('MISTER-BRAINWASH.ico'))
 app.addButton('add a profile',press)
+app.addButton('view profiles',press)
 app.addButton('train a profile',press)
 app.addButton('use a profile',press)
 # def checkStop():
@@ -209,4 +212,13 @@ app.setSize(defaultSize)
 #TODO handle profile not being trained and no profiles existing
 app.stopSubWindow()
 
+#============================= view profiles ===================================
+
+app.startSubWindow('view profiles window',title='view',modal=True)
+app.setSize(defaultSize)
+app.setPadding([20,20])
+app.startScrollPane('view profiles scroll pane')
+app.addListBox('view profiles list box',profiles())
+app.stopScrollPane()
+app.stopSubWindow()
 app.go()
