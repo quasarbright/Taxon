@@ -3,7 +3,7 @@ import subprocess
 import re, sys, os, shutil
 THIS_FOLDER = os.path.dirname(os.path.abspath("__file__"))
 defaultSize = '378x265'
-
+#now cx freeze
 #============================== general purpose functions ======================
 def relPath(f):
     '''returns absolute path of relative path f (can contain '/' but not '\\')'''
