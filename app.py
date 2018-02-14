@@ -3,7 +3,7 @@ import subprocess
 import re, sys, os, shutil
 THIS_FOLDER = os.path.dirname(os.path.abspath("__file__"))
 defaultSize = '378x265'
-#now cx freeze
+
 #============================== general purpose functions ======================
 def relPath(f):
     '''returns absolute path of relative path f (can contain '/' but not '\\')'''
@@ -19,12 +19,15 @@ def relPath(f):
 if not os.path.isdir(relPath('profiles')):
     os.mkdir(relPath('profiles'))
 def runpy(f,*options):
-    '''like runpy('tensorflow/retrain.py','-h')'''
-    # if 'tensorflow/' in f:
-    #     tempf = re.sub('tensorflow/','',f)
+    '''like runpy('retrain.py','-h')'''
+    # if '' in f:
+    #     tempf = re.sub('','',f)
     #     tempf = re.sub('\.py','\.exe',tempf)
     #     if os.path.isfile(relPath(tempf)):# if frozen
     #         return subprocess.check_output([relPath(tempf),*options]).decode('utf-8')
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        f = re.sub('.py','.exe')
     return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
 def profiles():
     return os.listdir(relPath('profiles'))
@@ -45,15 +48,15 @@ def train(profile,image_dir,shouldPrint=False):
     # print(myargs)
     # sys.exit()
     if shouldPrint:
-        print(runpy('tensorflow/retrain.py',*myargs))
+        print(runpy('retrain.py',*myargs))
     else:
-        runpy('tensorflow/retrain.py',*myargs)
+        runpy('retrain.py',*myargs)
     return None
 def label(profile,image_path,shouldPrint=False,shouldParse=True):
     profile = relPath('profiles/'+profile)
     myargs = '''--graph, {profile}\\output_graph.pb, --labels={profile}\\output_labels.txt, --input_layer=Mul, --output_layer=final_result, --input_mean=128, --input_std=128, --image={image_path}'''.format(profile=profile,image_path=image_path)
     myargs = myargs.split(', ')
-    ans = runpy('tensorflow/label_image.py',*myargs)
+    ans = runpy('label_image.py',*myargs)
     if not shouldParse:
         if shouldPrint:
             print(ans)
