@@ -109,6 +109,7 @@ def press(button):
     image_dir_selected = False
     if button == 'create':
         createProfile(app.getEntry('profile name'))
+        updateOptionBoxes()
     elif button == 'add a profile':
         app.showSubWindow('add profile window')
         app.setFocus('profile name')
@@ -156,6 +157,7 @@ def press(button):
     elif button == 'train':
         profile = app.getOptionBox('train profiles option box')
         image_dir = app.getLabel('image_dir')
+
         if image_dir:
             app.openSubWindow('train profile window')
             app.addMessage('training msg','The neural network is training. please do not close any of the applcation windows or shut down your computer. If it is the first time training this profile, it could take over 30 minutes. Otherwise, it should take about 1-5 minutes')
@@ -168,6 +170,7 @@ def press(button):
                     pass
                 app.enableButton('train')
                 app.hideSubWindow('train profile window')
+                updateOptionBoxes()
             app.threadCallback(train,whenDone,profile,image_dir,shouldPrint=True)
 
 #============================== main window ====================================
