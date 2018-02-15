@@ -69,8 +69,7 @@ def label(profile,image_path,shouldPrint=False,shouldParse=True):
     if shouldPrint:
         print(ans)
     return ans
-# print(train('flowers','D:\\code\\flower_neural_network\\flower_photos'))
-# sys.exit()
+
 # =============================== app-specific stuff ===========================
 
 def createProfile(name):
@@ -99,14 +98,18 @@ def createProfile(name):
             pass
         app.openSubWindow('add profile window')
         return False
+def updateOptionBoxes():
+    updateUseOptionBox()
+    updateTrainOptionBox()
 
-#=================================== main gui ==================================
+#=================================== press =====================================
 
 def press(button):
     image_dir = ''
     image_dir_selected = False
     if button == 'create':
         createProfile(app.getEntry('profile name'))
+        updateOptionBoxes()
     elif button == 'add a profile':
         app.showSubWindow('add profile window')
         app.setFocus('profile name')
@@ -154,6 +157,7 @@ def press(button):
     elif button == 'train':
         profile = app.getOptionBox('train profiles option box')
         image_dir = app.getLabel('image_dir')
+
         if image_dir:
             app.openSubWindow('train profile window')
             app.addMessage('training msg','The neural network is training. please do not close any of the applcation windows or shut down your computer. If it is the first time training this profile, it could take over 30 minutes. Otherwise, it should take about 1-5 minutes')
@@ -166,6 +170,7 @@ def press(button):
                     pass
                 app.enableButton('train')
                 app.hideSubWindow('train profile window')
+                updateOptionBoxes()
             app.threadCallback(train,whenDone,profile,image_dir,shouldPrint=True)
 
 #============================== main window ====================================
@@ -193,7 +198,10 @@ app.stopSubWindow()
 
 app.startSubWindow('train profile window',title="train",modal=True)
 app.startLabelFrame('select profile to train')
+def updateTrainOptionBox():
+    app.changeOptionBox('train profiles option box',profiles())
 app.addOptionBox('train profiles option box',profiles())
+updateTrainOptionBox()
 app.stopLabelFrame()
 app.setSize(defaultSize)
 app.addButton('choose image directory',press)
@@ -204,6 +212,8 @@ app.stopSubWindow()
 
 app.startSubWindow('use profile window',title='use',modal=True)
 app.startLabelFrame('select profile to use')
+def updateUseOptionBox():
+    app.changeOptionBox('use profiles option box',trainedProfiles())
 app.addOptionBox('use profiles option box',trainedProfiles())
 app.stopLabelFrame()
 app.addButton('select an image to be labeled',press)
@@ -221,4 +231,6 @@ app.startScrollPane('view profiles scroll pane')
 app.addListBox('view profiles list box',profiles())
 app.stopScrollPane()
 app.stopSubWindow()
+
+
 app.go()
