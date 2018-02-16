@@ -42,7 +42,7 @@ def labeledProfiles():
         if isTrained(p):
             ans.append(p + ' (trained)')
         else:
-            ans.append(p + ' (untrained)')
+            ans.append(p)
     return ans
 def train(profile,image_dir,shouldPrint=False):
     profile = relPath('profiles/'+profile)
@@ -113,6 +113,7 @@ def updateOptionBoxes():
     updateUseOptionBox()
     updateTrainOptionBox()
     updateRemoveOptionBox()
+    updateViewListBox()
 
 #=================================== press =====================================
 
@@ -170,6 +171,7 @@ def press(button):
             app.threadCallback(label,whenDone,profile,image_path,shouldPrint=True)#TODO change to false when done
     elif button == 'train':
         profile = app.getOptionBox('train profiles option box')
+        profile = re.sub(' (.*)','',profile)
         image_dir = app.getLabel('image_dir')
 
         if image_dir:
@@ -188,6 +190,7 @@ def press(button):
             app.threadCallback(train,whenDone,profile,image_dir,shouldPrint=True)
     elif button == 'remove':
         profile = app.getOptionBox('remove profiles option box')
+        profile = re.sub(' (.*)','',profile)
         removeProfile(profile)
         updateOptionBoxes()#TODO thread callback for deleting trained profiles
 
@@ -214,8 +217,8 @@ app.stopSubWindow()
 app.startSubWindow('train profile window',title="train",modal=True)
 app.startLabelFrame('select profile to train')
 def updateTrainOptionBox():
-    app.changeOptionBox('train profiles option box',labeledProfiles())
-app.addOptionBox('train profiles option box',labeledProfiles())
+    app.changeOptionBox('train profiles option box',profiles())
+app.addOptionBox('train profiles option box',profiles())
 updateTrainOptionBox()
 app.stopLabelFrame()
 app.setSize(defaultSize)
@@ -242,6 +245,8 @@ app.startSubWindow('view profiles window',title='view',modal=True)
 app.setSize(defaultSize)
 app.setPadding([20,20])
 app.startScrollPane('view profiles scroll pane')
+def updateViewListBox():
+    app.updateListBox('view profiles list box',labeledProfiles())
 app.addListBox('view profiles list box',labeledProfiles())
 app.stopScrollPane()
 app.stopSubWindow()
@@ -252,8 +257,8 @@ app.startSubWindow('remove profiles window',title='remove',modal=True)
 app.setSize(defaultSize)
 app.startLabelFrame('select profile to remove')
 def updateRemoveOptionBox():
-    app.changeOptionBox('remove profiles option box',labeledProfiles())
-app.addOptionBox('remove profiles option box',labeledProfiles())
+    app.changeOptionBox('remove profiles option box',profiles())
+app.addOptionBox('remove profiles option box',profiles())
 app.stopLabelFrame()
 app.addButton('remove',press)
 app.stopSubWindow()
