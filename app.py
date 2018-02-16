@@ -36,6 +36,14 @@ def trainedProfiles():
         if isTrained(p):
             ans.append(p)
     return ans
+def labeledProfiles():
+    ans = []
+    for p in profiles():
+        if isTrained(p):
+            ans.append(p + ' (trained)')
+        else:
+            ans.append(p + ' (untrained)')
+    return ans
 def train(profile,image_dir,shouldPrint=False):
     profile = relPath('profiles/'+profile)
     shutil.rmtree(relPath('profiles/'+profile+'/summaries'))
@@ -206,8 +214,8 @@ app.stopSubWindow()
 app.startSubWindow('train profile window',title="train",modal=True)
 app.startLabelFrame('select profile to train')
 def updateTrainOptionBox():
-    app.changeOptionBox('train profiles option box',profiles())
-app.addOptionBox('train profiles option box',profiles())
+    app.changeOptionBox('train profiles option box',labeledProfiles())
+app.addOptionBox('train profiles option box',labeledProfiles())
 updateTrainOptionBox()
 app.stopLabelFrame()
 app.setSize(defaultSize)
@@ -234,7 +242,7 @@ app.startSubWindow('view profiles window',title='view',modal=True)
 app.setSize(defaultSize)
 app.setPadding([20,20])
 app.startScrollPane('view profiles scroll pane')
-app.addListBox('view profiles list box',profiles())
+app.addListBox('view profiles list box',labeledProfiles())
 app.stopScrollPane()
 app.stopSubWindow()
 
@@ -244,8 +252,8 @@ app.startSubWindow('remove profiles window',title='remove',modal=True)
 app.setSize(defaultSize)
 app.startLabelFrame('select profile to remove')
 def updateRemoveOptionBox():
-    app.changeOptionBox('remove profiles option box',profiles())
-app.addOptionBox('remove profiles option box',profiles())
+    app.changeOptionBox('remove profiles option box',labeledProfiles())
+app.addOptionBox('remove profiles option box',labeledProfiles())
 app.stopLabelFrame()
 app.addButton('remove',press)
 app.stopSubWindow()
