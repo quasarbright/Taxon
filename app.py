@@ -28,11 +28,12 @@ def runpy(f,*options):
     return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
 def profiles():
     return os.listdir(relPath('profiles'))
+def isTrained(p):
+    return os.path.isfile(relPath('profiles/{p}/output_graph.pb'.format(p=p)))
 def trainedProfiles():
     ans = []
     for p in profiles():
-        output_graph = os.path.isfile(relPath('profiles/{p}/output_graph.pb'.format(p=p)))
-        if output_graph:
+        if isTrained(p):
             ans.append(p)
     return ans
 def train(profile,image_dir,shouldPrint=False):
@@ -98,9 +99,12 @@ def createProfile(name):
             pass
         app.openSubWindow('add profile window')
         return False
+def removeProfile(profile):
+    shutil.rmtree(relPath('profiles/'+profile))
 def updateOptionBoxes():
     updateUseOptionBox()
     updateTrainOptionBox()
+    updateRemoveOptionBox()
 
 #=================================== press =====================================
 
@@ -115,6 +119,8 @@ def press(button):
         app.setFocus('profile name')
     elif button == 'view profiles':
         app.showSubWindow('view profiles window')
+    elif button == 'remove a profile':
+        app.showSubWindow('remove profiles window')
     elif button == 'train a profile':
         if len(profiles()) > 0:
             app.showSubWindow('train profile window')
@@ -172,6 +178,10 @@ def press(button):
                 app.hideSubWindow('train profile window')
                 updateOptionBoxes()
             app.threadCallback(train,whenDone,profile,image_dir,shouldPrint=True)
+    elif button == 'remove':
+        profile = app.getOptionBox('remove profiles option box')
+        removeProfile(profile)
+        updateOptionBoxes()#TODO thread callback for deleting trained profiles
 
 #============================== main window ====================================
 
@@ -181,10 +191,7 @@ app.addButton('add a profile',press)
 app.addButton('view profiles',press)
 app.addButton('train a profile',press)
 app.addButton('use a profile',press)
-# def checkStop():
-#     sys.exit()
-#     return True
-# app.setStopFunction(checkStop)
+app.addButton('remove a profile',press)
 
 #=========================== create a new profile ==============================
 
@@ -219,7 +226,6 @@ app.stopLabelFrame()
 app.addButton('select an image to be labeled',press)
 app.addLabel('image_path','')
 app.setSize(defaultSize)
-#TODO handle profile not being trained and no profiles existing
 app.stopSubWindow()
 
 #============================= view profiles ===================================
@@ -230,6 +236,18 @@ app.setPadding([20,20])
 app.startScrollPane('view profiles scroll pane')
 app.addListBox('view profiles list box',profiles())
 app.stopScrollPane()
+app.stopSubWindow()
+
+#============================= remove profiles ===================================
+
+app.startSubWindow('remove profiles window',title='remove',modal=True)
+app.setSize(defaultSize)
+app.startLabelFrame('select profile to remove')
+def updateRemoveOptionBox():
+    app.changeOptionBox('remove profiles option box',profiles())
+app.addOptionBox('remove profiles option box',profiles())
+app.stopLabelFrame()
+app.addButton('remove',press)
 app.stopSubWindow()
 
 
