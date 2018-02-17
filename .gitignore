@@ -6,7 +6,10 @@ ehthumbs.db
 Desktop.ini
 
 #profiles
-profiles/*
+profiles*
+
+#build from cx freeze
+build/*
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
