@@ -31,11 +31,20 @@ def runpy(f,*options):
     return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
 def profiles():
     return os.listdir(relPath('profiles'))
+def isTrained(p):
+    return os.path.isfile(relPath('profiles/{p}/output_graph.pb'.format(p=p)))
 def trainedProfiles():
     ans = []
     for p in profiles():
-        output_graph = os.path.isfile(relPath('profiles/{p}/output_graph.pb'.format(p=p)))
-        if output_graph:
+        if isTrained(p):
+            ans.append(p)
+    return ans
+def labeledProfiles():
+    ans = []
+    for p in profiles():
+        if isTrained(p):
+            ans.append(p + ' (trained)')
+        else:
             ans.append(p)
     return ans
 def train(profile,image_dir,shouldPrint=False):
@@ -72,8 +81,7 @@ def label(profile,image_path,shouldPrint=False,shouldParse=True):
     if shouldPrint:
         print(ans)
     return ans
-# print(train('flowers','D:\\code\\flower_neural_network\\flower_photos'))
-# sys.exit()
+
 # =============================== app-specific stuff ===========================
 
 def createProfile(name):
@@ -102,19 +110,29 @@ def createProfile(name):
             pass
         app.openSubWindow('add profile window')
         return False
+def removeProfile(profile):
+    shutil.rmtree(relPath('profiles/'+profile))
+def updateOptionBoxes():
+    updateUseOptionBox()
+    updateTrainOptionBox()
+    updateRemoveOptionBox()
+    updateViewListBox()
 
-#=================================== main gui ==================================
+#=================================== press =====================================
 
 def press(button):
     image_dir = ''
     image_dir_selected = False
     if button == 'create':
         createProfile(app.getEntry('profile name'))
+        updateOptionBoxes()
     elif button == 'add a profile':
         app.showSubWindow('add profile window')
         app.setFocus('profile name')
     elif button == 'view profiles':
         app.showSubWindow('view profiles window')
+    elif button == 'remove a profile':
+        app.showSubWindow('remove profiles window')
     elif button == 'train a profile':
         if len(profiles()) > 0:
             app.showSubWindow('train profile window')
@@ -156,7 +174,9 @@ def press(button):
             app.threadCallback(label,whenDone,profile,image_path,shouldPrint=True)#TODO change to false when done
     elif button == 'train':
         profile = app.getOptionBox('train profiles option box')
+        profile = re.sub(' (.*)','',profile)
         image_dir = app.getLabel('image_dir')
+
         if image_dir:
             app.openSubWindow('train profile window')
             app.addMessage('training msg','The neural network is training. please do not close any of the applcation windows or shut down your computer. If it is the first time training this profile, it could take over 30 minutes. Otherwise, it should take about 1-5 minutes')
@@ -169,7 +189,13 @@ def press(button):
                     pass
                 app.enableButton('train')
                 app.hideSubWindow('train profile window')
+                updateOptionBoxes()
             app.threadCallback(train,whenDone,profile,image_dir,shouldPrint=True)
+    elif button == 'remove':
+        profile = app.getOptionBox('remove profiles option box')
+        profile = re.sub(' (.*)','',profile)
+        removeProfile(profile)
+        updateOptionBoxes()#TODO thread callback for deleting trained profiles
 
 #============================== main window ====================================
 
@@ -179,10 +205,7 @@ app.addButton('add a profile',press)
 app.addButton('view profiles',press)
 app.addButton('train a profile',press)
 app.addButton('use a profile',press)
-# def checkStop():
-#     sys.exit()
-#     return True
-# app.setStopFunction(checkStop)
+app.addButton('remove a profile',press)
 
 #=========================== create a new profile ==============================
 
@@ -196,7 +219,10 @@ app.stopSubWindow()
 
 app.startSubWindow('train profile window',title="train",modal=True)
 app.startLabelFrame('select profile to train')
+def updateTrainOptionBox():
+    app.changeOptionBox('train profiles option box',profiles())
 app.addOptionBox('train profiles option box',profiles())
+updateTrainOptionBox()
 app.stopLabelFrame()
 app.setSize(defaultSize)
 app.addButton('choose image directory',press)
@@ -207,12 +233,13 @@ app.stopSubWindow()
 
 app.startSubWindow('use profile window',title='use',modal=True)
 app.startLabelFrame('select profile to use')
+def updateUseOptionBox():
+    app.changeOptionBox('use profiles option box',trainedProfiles())
 app.addOptionBox('use profiles option box',trainedProfiles())
 app.stopLabelFrame()
 app.addButton('select an image to be labeled',press)
 app.addLabel('image_path','')
 app.setSize(defaultSize)
-#TODO handle profile not being trained and no profiles existing
 app.stopSubWindow()
 
 #============================= view profiles ===================================
@@ -221,7 +248,23 @@ app.startSubWindow('view profiles window',title='view',modal=True)
 app.setSize(defaultSize)
 app.setPadding([20,20])
 app.startScrollPane('view profiles scroll pane')
-app.addListBox('view profiles list box',profiles())
+def updateViewListBox():
+    app.updateListBox('view profiles list box',labeledProfiles())
+app.addListBox('view profiles list box',labeledProfiles())
 app.stopScrollPane()
 app.stopSubWindow()
+
+#============================= remove profiles ===================================
+
+app.startSubWindow('remove profiles window',title='remove',modal=True)
+app.setSize(defaultSize)
+app.startLabelFrame('select profile to remove')
+def updateRemoveOptionBox():
+    app.changeOptionBox('remove profiles option box',profiles())
+app.addOptionBox('remove profiles option box',profiles())
+app.stopLabelFrame()
+app.addButton('remove',press)
+app.stopSubWindow()
+
+
 app.go()
