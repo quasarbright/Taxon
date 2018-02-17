@@ -7,21 +7,21 @@ os.environ['TK_LIBRARY'] = os.path.join(PYTHON_INSTALL_DIR, 'tcl', 'tk8.6')
 build_exe_options = {
     "packages": ["os"],
     'include_files':[
-        'profiles','retrain.py','label_image.py','MISTER-BRAINWASH.ico',
+        'retrain.py','label_image.py','MISTER-BRAINWASH.ico',
         os.path.join(PYTHON_INSTALL_DIR, 'DLLs', 'tk86t.dll'),
         os.path.join(PYTHON_INSTALL_DIR, 'DLLs', 'tcl86t.dll')
-        ],
+        ]
     }
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
 base = None
-if sys.platform == "win32":
-    base = "Win32GUI"
+# if sys.platform == "win32":
+#     base = "Win32"
 executables = [
     Executable("app.py", base=base, icon='MISTER-BRAINWASH.ico'),
-    Executable("retrain.py",base=base),
-    Executable("label_image.py",base=base)
+    Executable("retrain.py",base=None),
+    Executable("label_image.py",base=None)
 ]
 
 setup(  name = "Taxon",
