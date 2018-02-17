@@ -85,10 +85,7 @@ def createProfile(name):
     name = re.sub(' ','_',name)
     match = re.sub(r'\w','',name)
     if match != '':
-        try:
-            app.errorBox('profile name error','profile names can only contain letters, numbers, and underscores',parent='add profile window')
-        except AttributeError:
-            pass
+        app.errorBox('profile name error','profile names can only contain letters, numbers, and underscores',parent=None)
         return None
     name = relPath('profiles/'+name)
     # print(name)
@@ -99,17 +96,13 @@ def createProfile(name):
         mk('bottleneck_dir')
         mk('intermediate_out')
         mk('summaries')
-        app.hideSubWindow('add profile window')
+        updateOptionBoxes()
     except FileExistsError:
-        try:
-            app.errorBox('profile already exists error','It appears a profile with that name already exists',parent='add profile window')
-        except AttributeError:
-            pass
-        app.openSubWindow('add profile window')
-        return False
+        app.errorBox('profile already exists error','It appears a profile with that name already exists',parent=None)
 def removeProfile(profile):
     shutil.rmtree(relPath('profiles/'+profile))
 def updateOptionBoxes():
+    '''updates all option boxes and list boxes after the profiles have been edited'''
     updateUseOptionBox()
     updateTrainOptionBox()
     updateRemoveOptionBox()
@@ -120,12 +113,10 @@ def updateOptionBoxes():
 def press(button):
     image_dir = ''
     image_dir_selected = False
-    if button == 'create':
-        createProfile(app.getEntry('profile name'))
-        updateOptionBoxes()
-    elif button == 'add a profile':
-        app.showSubWindow('add profile window')
-        app.setFocus('profile name')
+    if button == 'add a profile':
+        profile = app.stringBox('create a profile','type profile name (only letters, numbers, and "_")')
+        if profile:
+            createProfile(profile)
     elif button == 'view profiles':
         app.showSubWindow('view profiles window')
     elif button == 'remove a profile':
@@ -204,14 +195,6 @@ app.addButton('train a profile',press)
 app.addButton('use a profile',press)
 app.addButton('remove a profile',press)
 
-#=========================== create a new profile ==============================
-
-app.startSubWindow('add profile window',title='add',modal=True)
-app.setSize(defaultSize)
-app.addLabelEntry("profile name")
-app.addButton('create',press)
-app.stopSubWindow()
-
 #============================= train a profile =================================
 
 app.startSubWindow('train profile window',title="train",modal=True)
@@ -241,7 +224,7 @@ app.stopSubWindow()
 
 #============================= view profiles ===================================
 
-app.startSubWindow('view profiles window',title='view',modal=True)
+app.startSubWindow('view profiles window',title='view',modal=False)
 app.setSize(defaultSize)
 app.setPadding([20,20])
 app.startScrollPane('view profiles scroll pane')
