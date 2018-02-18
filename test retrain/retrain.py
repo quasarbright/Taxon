@@ -1274,4 +1274,4 @@ def myFunc(myargs):
       """)
 
     FLAGS, unparsed = parser.parse_known_args(myargs)
-    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    tf.app.run(main=main, argv=[os.path.abspath('retrain.py')] + unparsed)
