@@ -9,7 +9,10 @@ Desktop.ini
 profiles*
 
 #build from cx freeze
-build/*
+build*
+
+#pycache
+__pycache__*
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
