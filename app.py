@@ -1,5 +1,5 @@
 from appJar import gui
-import subprocess, re, sys, os, shutil, retrain, label_image
+import subprocess, re, sys, os, shutil, retrain, label_image, webbrowser
 THIS_FOLDER = os.path.dirname(os.path.abspath("__file__"))
 defaultSize = '378x265'
 
@@ -202,16 +202,22 @@ def press(button):
             profile = re.sub(' (.*)','',profile)
             removeProfile(profile)
         updateOptionBoxes()#TODO thread callback for deleting trained profiles
+    elif button == 'help':
+        webbrowser.open('https://quasarbright.github.io/Taxon')
 
 #============================== main window ====================================
 
 app = gui('Taxon',defaultSize)
 app.setIcon(relPath('MISTER-BRAINWASH.ico'))
-app.addButton('add a profile',press)
-app.addButton('view profiles',press)
-app.addButton('train a profile',press)
-app.addButton('use a profile',press)
-app.addButton('remove a profile',press)
+buttons = [
+    ['add a profile','view profiles'],
+    ['train a profile','use a profile'],
+    ['remove a profile'],
+    ['help']
+]
+for row in buttons:
+    app.addButtons(row,press)
+
 
 #============================= train a profile =================================
 
