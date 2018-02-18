@@ -1,6 +1,5 @@
 from appJar import gui
-import subprocess
-import re, sys, os, shutil
+import subprocess, re, sys, os, shutil, retrain, label_image
 THIS_FOLDER = os.path.dirname(os.path.abspath("__file__"))
 defaultSize = '378x265'
 
@@ -19,12 +18,16 @@ def relPath(f):
 if not os.path.isdir(relPath('profiles')):
     os.mkdir(relPath('profiles'))
 def runpy(f,*options):
-    '''like runpy('tensorflow/retrain.py','-h')'''
-    # if 'tensorflow/' in f:
-    #     tempf = re.sub('tensorflow/','',f)
+    '''like runpy('retrain.py','-h')'''
+    # if '' in f:
+    #     tempf = re.sub('','',f)
     #     tempf = re.sub('\.py','\.exe',tempf)
     #     if os.path.isfile(relPath(tempf)):# if frozen
     #         return subprocess.check_output([relPath(tempf),*options]).decode('utf-8')
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        # f = re.sub('.py','.exe',f)
+        return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
     return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
 def profiles():
     return os.listdir(relPath('profiles'))
@@ -46,26 +49,21 @@ def labeledProfiles():
     return ans
 def train(profile,image_dir,shouldPrint=False):
     profile = relPath('profiles/'+profile)
-    shutil.rmtree(relPath('profiles/'+profile+'/summaries'))
+    try:
+        shutil.rmtree(relPath('profiles/'+profile+'/summaries'))
+    except FileNotFoundError:
+        pass
     myargs = """'--image_dir', '{image_dir}', '--output_graph', '{profile}\\output_graph.pb', '--intermediate_output_graphs_dir', '{profile}\\intermediate_out', '--output_labels', '{profile}\\output_labels.txt', '--summaries_dir', '{profile}\\summaries', '--bottleneck_dir', '{profile}\\bottleneck_dir', '--how_many_training_steps', '1000', '--model_dir', '{profile}\\model_dir'""".format(image_dir=image_dir,profile=profile)
     myargs.split(', ')
     myargs = re.sub("'",'',myargs)
     myargs = myargs.split(', ')
-    # print(myargs)
-    # sys.exit()
-    if shouldPrint:
-        print(runpy('tensorflow/retrain.py',*myargs))
-    else:
-        runpy('tensorflow/retrain.py',*myargs)
-    return None
+    retrain.myFunc(myargs)
 def label(profile,image_path,shouldPrint=False,shouldParse=True):
     profile = relPath('profiles/'+profile)
     myargs = '''--graph, {profile}\\output_graph.pb, --labels={profile}\\output_labels.txt, --input_layer=Mul, --output_layer=final_result, --input_mean=128, --input_std=128, --image={image_path}'''.format(profile=profile,image_path=image_path)
     myargs = myargs.split(', ')
-    ans = runpy('tensorflow/label_image.py',*myargs)
+    ans = label_image.myFunc(myargs)
     if not shouldParse:
-        if shouldPrint:
-            print(ans)
         return ans
     ans = re.split(r'[\n\r]+',ans)
     ans = [e.split(' ') for e in ans][:-1]
@@ -74,14 +72,14 @@ def label(profile,image_path,shouldPrint=False,shouldParse=True):
     ans = ans[0]
     ans[1] = ans[1] * 100
     ans = "{ans[0]}  ({ans[1]}% confident)".format(ans=ans)
-
-    if shouldPrint:
-        print(ans)
     return ans
 
 # =============================== app-specific stuff ===========================
 
 def createProfile(name):
+    if name == '':
+        print('warning: tried to create profile with empty string name')
+        return None
     name = re.sub(' ','_',name)
     match = re.sub(r'\w','',name)
     if match != '':
@@ -100,13 +98,16 @@ def createProfile(name):
     except FileExistsError:
         app.errorBox('profile already exists error','It appears a profile with that name already exists',parent=None)
 def removeProfile(profile):
-    shutil.rmtree(relPath('profiles/'+profile))
+    if profile == '':
+        print('warning: tried to remove profile with name empty string.')
+        return None
+    shutil.rmtree(relPath('profiles/'+profile),ignore_errors=True)
 def updateOptionBoxes():
     '''updates all option boxes and list boxes after the profiles have been edited'''
+    updateViewListBox()
     updateUseOptionBox()
     updateTrainOptionBox()
     updateRemoveOptionBox()
-    updateViewListBox()
 
 #=================================== press =====================================
 
@@ -118,9 +119,21 @@ def press(button):
         if profile:
             createProfile(profile)
     elif button == 'view profiles':
-        app.showSubWindow('view profiles window')
+        if len(profiles()) > 0:
+            app.showSubWindow('view profiles window')
+        else:
+            try:
+                app.errorBox('no profiles to view error',"To view your profiles, you need to have profiles. Try adding one")
+            except AttributeError:
+                pass
     elif button == 'remove a profile':
-        app.showSubWindow('remove profiles window')
+        if len(profiles()) > 0:
+            app.showSubWindow('remove profiles window')
+        else:
+            try:
+                app.errorBox('no profiles to remove error','There are no profiles to remove. Try adding one')
+            except AttributeError:
+                pass
     elif button == 'train a profile':
         if len(profiles()) > 0:
             app.showSubWindow('train profile window')
@@ -134,7 +147,7 @@ def press(button):
             app.showSubWindow('use profile window')
         else:
             try:
-                app.errorBox('no profiles to use error','To use a profile, you need a profile. Try adding one')
+                app.errorBox('no profiles to use error',"To use a profile, you need a trained profile. Try training one. If you don't have any, try adding one")
             except AttributeError:
                 pass
     elif button == 'choose image directory':
@@ -162,6 +175,8 @@ def press(button):
             app.threadCallback(label,whenDone,profile,image_path,shouldPrint=True)#TODO change to false when done
     elif button == 'train':
         profile = app.getOptionBox('train profiles option box')
+        if profile == '':
+            return None
         profile = re.sub(' (.*)','',profile)
         image_dir = app.getLabel('image_dir')
 
@@ -181,8 +196,11 @@ def press(button):
             app.threadCallback(train,whenDone,profile,image_dir,shouldPrint=True)
     elif button == 'remove':
         profile = app.getOptionBox('remove profiles option box')
-        profile = re.sub(' (.*)','',profile)
-        removeProfile(profile)
+        if profile == '':
+            return None
+        if profile:
+            profile = re.sub(' (.*)','',profile)
+            removeProfile(profile)
         updateOptionBoxes()#TODO thread callback for deleting trained profiles
 
 #============================== main window ====================================
@@ -200,9 +218,11 @@ app.addButton('remove a profile',press)
 app.startSubWindow('train profile window',title="train",modal=True)
 app.startLabelFrame('select profile to train')
 def updateTrainOptionBox():
-    app.changeOptionBox('train profiles option box',profiles())
+    arr = profiles()
+    if not arr:
+        arr = ['']
+    app.changeOptionBox('train profiles option box',arr)
 app.addOptionBox('train profiles option box',profiles())
-updateTrainOptionBox()
 app.stopLabelFrame()
 app.setSize(defaultSize)
 app.addButton('choose image directory',press)
@@ -214,7 +234,10 @@ app.stopSubWindow()
 app.startSubWindow('use profile window',title='use',modal=True)
 app.startLabelFrame('select profile to use')
 def updateUseOptionBox():
-    app.changeOptionBox('use profiles option box',trainedProfiles())
+    arr = trainedProfiles()
+    if not arr:
+        arr = ['']
+    app.changeOptionBox('use profiles option box',arr)
 app.addOptionBox('use profiles option box',trainedProfiles())
 app.stopLabelFrame()
 app.addButton('select an image to be labeled',press)
@@ -229,7 +252,10 @@ app.setSize(defaultSize)
 app.setPadding([20,20])
 app.startScrollPane('view profiles scroll pane')
 def updateViewListBox():
-    app.updateListBox('view profiles list box',labeledProfiles())
+    arr = labeledProfiles()
+    if not arr:
+        arr = ['']
+    app.updateListBox('view profiles list box',arr)
 app.addListBox('view profiles list box',labeledProfiles())
 app.stopScrollPane()
 app.stopSubWindow()
@@ -240,8 +266,14 @@ app.startSubWindow('remove profiles window',title='remove',modal=True)
 app.setSize(defaultSize)
 app.startLabelFrame('select profile to remove')
 def updateRemoveOptionBox():
-    app.changeOptionBox('remove profiles option box',profiles())
-app.addOptionBox('remove profiles option box',profiles())
+    arr = profiles()
+    if not arr:
+        arr = ['']
+    app.changeOptionBox('remove profiles option box',arr)
+arr = profiles()
+if not arr:
+    arr = ['']
+app.addOptionBox('remove profiles option box',arr)
 app.stopLabelFrame()
 app.addButton('remove',press)
 app.stopSubWindow()

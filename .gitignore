@@ -6,7 +6,16 @@ ehthumbs.db
 Desktop.ini
 
 #profiles
-profiles/*
+profiles*
+
+#build from cx freeze
+build*
+
+#pycache
+__pycache__*
+
+#testing
+test retrain*
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
