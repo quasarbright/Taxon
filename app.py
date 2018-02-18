@@ -1,6 +1,5 @@
 from appJar import gui
-import subprocess
-import re, sys, os, shutil
+import subprocess, re, sys, os, shutil
 THIS_FOLDER = os.path.dirname(os.path.abspath("__file__"))
 defaultSize = '378x265'
 
@@ -60,8 +59,6 @@ def train(profile,image_dir,shouldPrint=False):
     myargs = myargs.split(', ')
     # print(myargs)
     # sys.exit()
-    print(myargs)
-    sys.exit()
     if shouldPrint:
         print(runpy('retrain.py',*myargs))
     else:
