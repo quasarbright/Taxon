@@ -120,5 +120,8 @@ def myFunc(myargs):
 
     top_k = results.argsort()[-5:][::-1]
     labels = load_labels(label_file)
+    ans = ''
     for i in top_k:
+        ans += '{0} {1}\n'.format(labels[i],results[i])
         print(labels[i], results[i])
+    return ans
