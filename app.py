@@ -1,5 +1,5 @@
 from appJar import gui
-import subprocess, re, sys, os, shutil
+import subprocess, re, sys, os, shutil, retrain, label_image
 THIS_FOLDER = os.path.dirname(os.path.abspath("__file__"))
 defaultSize = '378x265'
 
@@ -57,21 +57,13 @@ def train(profile,image_dir,shouldPrint=False):
     myargs.split(', ')
     myargs = re.sub("'",'',myargs)
     myargs = myargs.split(', ')
-    # print(myargs)
-    # sys.exit()
-    if shouldPrint:
-        print(runpy('retrain.py',*myargs))
-    else:
-        runpy('retrain.py',*myargs)
-    return None
+    retrain.myFunc(myargs)
 def label(profile,image_path,shouldPrint=False,shouldParse=True):
     profile = relPath('profiles/'+profile)
     myargs = '''--graph, {profile}\\output_graph.pb, --labels={profile}\\output_labels.txt, --input_layer=Mul, --output_layer=final_result, --input_mean=128, --input_std=128, --image={image_path}'''.format(profile=profile,image_path=image_path)
     myargs = myargs.split(', ')
-    ans = runpy('label_image.py',*myargs)
+    ans = label_image.myFunc(myargs)
     if not shouldParse:
-        if shouldPrint:
-            print(ans)
         return ans
     ans = re.split(r'[\n\r]+',ans)
     ans = [e.split(' ') for e in ans][:-1]
@@ -80,9 +72,6 @@ def label(profile,image_path,shouldPrint=False,shouldParse=True):
     ans = ans[0]
     ans[1] = ans[1] * 100
     ans = "{ans[0]}  ({ans[1]}% confident)".format(ans=ans)
-
-    if shouldPrint:
-        print(ans)
     return ans
 
 # =============================== app-specific stuff ===========================
