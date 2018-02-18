@@ -15,6 +15,7 @@
 
 ### Things you shouldn't do:
 * do not store any files in or manipulate the program's directory in any way
+
 # for developers:
 ### dependencies (for non-frozen python):
 * [tensorflow](https://www.tensorflow.org/install/) version 1.5.0
