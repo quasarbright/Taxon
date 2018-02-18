@@ -27,7 +27,8 @@ def runpy(f,*options):
     #         return subprocess.check_output([relPath(tempf),*options]).decode('utf-8')
     if getattr(sys, 'frozen', False):
         # The application is frozen
-        f = re.sub('.py','.exe',f)
+        # f = re.sub('.py','.exe',f)
+        return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
     return subprocess.check_output([sys.executable, relPath(f),*options]).decode('utf-8')
 def profiles():
     return os.listdir(relPath('profiles'))
@@ -49,13 +50,18 @@ def labeledProfiles():
     return ans
 def train(profile,image_dir,shouldPrint=False):
     profile = relPath('profiles/'+profile)
-    shutil.rmtree(relPath('profiles/'+profile+'/summaries'))
+    try:
+        shutil.rmtree(relPath('profiles/'+profile+'/summaries'))
+    except FileNotFoundError:
+        pass
     myargs = """'--image_dir', '{image_dir}', '--output_graph', '{profile}\\output_graph.pb', '--intermediate_output_graphs_dir', '{profile}\\intermediate_out', '--output_labels', '{profile}\\output_labels.txt', '--summaries_dir', '{profile}\\summaries', '--bottleneck_dir', '{profile}\\bottleneck_dir', '--how_many_training_steps', '1000', '--model_dir', '{profile}\\model_dir'""".format(image_dir=image_dir,profile=profile)
     myargs.split(', ')
     myargs = re.sub("'",'',myargs)
     myargs = myargs.split(', ')
     # print(myargs)
     # sys.exit()
+    print(myargs)
+    sys.exit()
     if shouldPrint:
         print(runpy('retrain.py',*myargs))
     else:
@@ -109,7 +115,7 @@ def removeProfile(profile):
     if profile == '':
         print('warning: tried to remove profile with name empty string.')
         return None
-    shutil.rmtree(relPath('profiles/'+profile))
+    shutil.rmtree(relPath('profiles/'+profile),ignore_errors=True)
 def updateOptionBoxes():
     '''updates all option boxes and list boxes after the profiles have been edited'''
     updateViewListBox()
@@ -227,7 +233,6 @@ app.startSubWindow('train profile window',title="train",modal=True)
 app.startLabelFrame('select profile to train')
 def updateTrainOptionBox():
     arr = profiles()
-    print(arr)
     if not arr:
         arr = ['']
     app.changeOptionBox('train profiles option box',arr)
@@ -276,10 +281,8 @@ app.setSize(defaultSize)
 app.startLabelFrame('select profile to remove')
 def updateRemoveOptionBox():
     arr = profiles()
-    print(arr)
     if not arr:
         arr = ['']
-    print(arr)
     app.changeOptionBox('remove profiles option box',arr)
 arr = profiles()
 if not arr:
