@@ -216,7 +216,9 @@ app.addButton('remove a profile',press)
 #============================= train a profile =================================
 
 app.startSubWindow('train profile window',title="train",modal=True)
+app.setSticky('ew')
 app.startLabelFrame('select profile to train')
+app.setSticky('ew')
 def updateTrainOptionBox():
     arr = profiles()
     if not arr:
@@ -224,6 +226,7 @@ def updateTrainOptionBox():
     app.changeOptionBox('train profiles option box',arr)
 app.addOptionBox('train profiles option box',profiles())
 app.stopLabelFrame()
+app.setSticky('')
 app.setSize(defaultSize)
 app.addButton('choose image directory',press)
 app.addLabel('image_dir','')
@@ -232,7 +235,9 @@ app.stopSubWindow()
 #============================= use a profile ===================================
 
 app.startSubWindow('use profile window',title='use',modal=True)
+app.setSticky('ew')
 app.startLabelFrame('select profile to use')
+app.setSticky('ew')
 def updateUseOptionBox():
     arr = trainedProfiles()
     if not arr:
@@ -240,6 +245,7 @@ def updateUseOptionBox():
     app.changeOptionBox('use profiles option box',arr)
 app.addOptionBox('use profiles option box',trainedProfiles())
 app.stopLabelFrame()
+app.setSticky('')
 app.addButton('select an image to be labeled',press)
 app.addLabel('image_path','')
 app.setSize(defaultSize)
@@ -264,7 +270,9 @@ app.stopSubWindow()
 
 app.startSubWindow('remove profiles window',title='remove',modal=True)
 app.setSize(defaultSize)
+app.setSticky('ew')
 app.startLabelFrame('select profile to remove')
+app.setSticky('ew')
 def updateRemoveOptionBox():
     arr = profiles()
     if not arr:
@@ -275,6 +283,7 @@ if not arr:
     arr = ['']
 app.addOptionBox('remove profiles option box',arr)
 app.stopLabelFrame()
+app.setSticky('')
 app.addButton('remove',press)
 app.stopSubWindow()
 
